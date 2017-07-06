@@ -29,14 +29,6 @@ class App extends Component {
     return map;
   }
 
-  // smoothMap(map, iterations) {
-  //   let rockLimit =
-  // }
-  //
-  // countNeighbours(map) {
-  //
-  // }
-
   render() {
     return (
       <div>
