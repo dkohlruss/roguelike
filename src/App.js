@@ -6,20 +6,36 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    this.map = this.createBoard(10,10);
+    this.map = this.createBoard(100,100); // Creates game board with x,y width/height
+    this.state = {map: this.map};
   }
 
   createBoard(height, width) {
     let map = [];
+    let isLand = true;
+    let limit = 0.55;
 
     for (var i = 0; i < height; i++) {
       for (var j = 0; j < width; j++) {
-        map.push([[j, i], Math.random()]);
+        let rand = Math.random();
+        if (rand < limit) {
+          isLand = false;
+        }
+        map.push([j, i, isLand]);
+        isLand = true;
       }
     }
 
     return map;
   }
+
+  // smoothMap(map, iterations) {
+  //   let rockLimit =
+  // }
+  //
+  // countNeighbours(map) {
+  //
+  // }
 
   render() {
     return (
