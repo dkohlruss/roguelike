@@ -74,6 +74,160 @@ class App extends Component {
       });
   }
 
+  // HELPER FUNCTIONS TO EASILY MOVE FROM ID OF ARRAY TO X/Y COORDS
+  getID(row, col) {
+    let total = Math.sqrt(this.map.length);
+    let neighbour = row * total + col;
+
+    return neighbour;
+  }
+
+  getRowCol(id) {
+    let total = Math.sqrt(this.map.length);
+    let row = Math.floor(id / total);
+    let column = id - row * total;
+
+    let rowCol = {
+      row: row,
+      col: column
+    }
+
+    return rowCol;
+  }
+
+  // CELLULAR AUTOMA 'NEIGHBOUR COUNTING' FUNCTIONS
+  getNeighbours(row, column) {
+    let neighbours = 0;
+    if (this.selectedNeighbour(row-1, column-1)) {
+      neighbours++;
+    }
+    if (this.selectedNeighbour(row-1, column)) {
+      neighbours++;
+    }
+    if (this.selectedNeighbour(row-1, column+1)) {
+      neighbours++
+    }
+    if (this.selectedNeighbour(row, column-1)) {
+      neighbours++
+    }
+    if (this.selectedNeighbour(row, column+1)) {
+      neighbours++
+    }
+    if (this.selectedNeighbour(row+1, column-1)) {
+      neighbours+
+    }
+    if (this.selectedNeighbour(row+1, column)) {
+      neighbours++;
+    }
+    if (this.selectedNeighbour(row+1, column+1)) {
+      neighbours++;
+    }
+
+    return neighbours;
+  }
+
+  selectedNeighbour(row, col) {
+    let total = Math.sqrt(this.map.length);
+
+    if (row === -1) {
+      return false;
+    }
+    if (row === total) {
+      return false;
+    }
+    if (col === -1) {
+      return false;
+    }
+    if (col === total) {
+      return false;
+    }
+
+    let neighbour = row * total + col;
+    return this.map[neighbour][2];
+  }
+
+  // MAP CREATION AND SMOOTHING
+  createMap(height, width) {
+    let map = [];
+    let isLand = true;
+    let limit = 0.55;
+
+    for (var i = 0; i < height; i++) {
+      for (var j = 0; j < width; j++) {
+        let rand = Math.random();
+        if (rand < limit) {
+          isLand = false;
+        }
+        map.push([j, i, isLand]);
+        isLand = true;
+      }
+    }
+
+    return map;
+  }
+
+  makeBoard(map) {
+    let visualMap = [];
+    let iterations = 2;
+    for (let j = 0; j < iterations; j++) {
+      this.smoothMap();
+    }
+
+    for (let i = 0; i < map.length; i++) {
+      if (map[i][2]) {
+        visualMap.push(<Cell type='land' key={visualMap.length} passable={true} black={false} />);
+      } else {
+        visualMap.push(<Cell type='rock' key={visualMap.length} passable={false} black={false} />);
+      }
+    }
+    return visualMap;
+  }
+
+  smoothMap() {
+    let newMap = [];
+    for (let i = 0; i < this.map.length; i++) {
+      newMap.push(this.map[i]);
+    }
+
+    let total = Math.sqrt(this.map.length);
+
+    for (var i = 0; i < this.map.length; i++) {
+      let neighbours = 0;
+      let row = Math.floor(i / total);
+      let column = i - row * total;
+
+      if (row > 2 && column > 2 && row < total - 3 && column < total - 3) {
+        neighbours = this.getNeighbours(row, column);
+      }
+
+      newMap[i][2] = this.doSimulationStep(neighbours, i);
+    }
+
+    this.map = newMap;
+  }
+
+  doSimulationStep(count, id) {
+    let deathLimit = 3;
+    let birthLimit = 4;
+
+    if (this.map[id][2]) {
+      if (count < deathLimit) {
+        return false;
+      } else {
+        return true;
+      }
+    } else {
+      if (count > birthLimit) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
+
+
+  // WORLD INTERACTION FUNCTIONS
+
   checkCollision(currentXY, nextXY) {
     let hero = this.state.hero;
     let visualMap = this.state.visualMap;
@@ -210,6 +364,8 @@ class App extends Component {
       return nextXY;
   }
 
+
+  // GENERATION AND PLACING OF OBJECTS, ENEMIES, ETC RANDOMLY
   generateEnemies() {
     let enemies = [];
     let limit = 20;
@@ -339,27 +495,6 @@ class App extends Component {
     return meds;
   }
 
-
-  getID(row, col) {
-    let total = Math.sqrt(this.map.length);
-    let neighbour = row * total + col;
-
-    return neighbour;
-  }
-
-  getRowCol(id) {
-    let total = Math.sqrt(this.map.length);
-    let row = Math.floor(id / total);
-    let column = id - row * total;
-
-    let rowCol = {
-      row: row,
-      col: column
-    }
-
-    return rowCol;
-  }
-
   placeTreasure(treasure) {
     let map = this.state.visualMap;
     let rand = Math.random();
@@ -386,157 +521,7 @@ class App extends Component {
     map[rand] = <Cell type={obj.type} key={obj.location} passable={obj.passable}/>;
   }
 
-  createMap(height, width) {
-    let map = [];
-    let isLand = true;
-    let limit = 0.55;
-
-    for (var i = 0; i < height; i++) {
-      for (var j = 0; j < width; j++) {
-        let rand = Math.random();
-        if (rand < limit) {
-          isLand = false;
-        }
-        map.push([j, i, isLand]);
-        isLand = true;
-      }
-    }
-
-    return map;
-  }
-
-  makeBoard(map) {
-    let visualMap = [];
-    let iterations = 2;
-    for (let j = 0; j < iterations; j++) {
-      this.smoothMap();
-    }
-
-    for (let i = 0; i < map.length; i++) {
-      if (map[i][2]) {
-        visualMap.push(<Cell type='land' key={visualMap.length} passable={true} black={false} />);
-      } else {
-        visualMap.push(<Cell type='rock' key={visualMap.length} passable={false} black={false} />);
-      }
-    }
-    return visualMap;
-  }
-
-  smoothMap() {
-    let newMap = [];
-    for (let i = 0; i < this.map.length; i++) {
-      newMap.push(this.map[i]);
-    }
-
-    let total = Math.sqrt(this.map.length);
-
-    for (var i = 0; i < this.map.length; i++) {
-      let neighbours = 0;
-      let row = Math.floor(i / total);
-      let column = i - row * total;
-
-      if (row > 2 && column > 2 && row < total - 3 && column < total - 3) {
-        neighbours = this.getNeighbours(row, column);
-      }
-
-      newMap[i][2] = this.doSimulationStep(neighbours, i);
-    }
-
-    this.map = newMap;
-  }
-
-  getNeighbours(row, column) {
-    let neighbours = 0;
-    // Check above-left
-    if (this.selectedNeighbour(row-1, column-1)) {
-      // console.log('Above left Neighbor found for ' + i);
-      neighbours++;
-    }
-
-    // Check above
-    if (this.selectedNeighbour(row-1, column)) {
-      neighbours++;
-      // console.log('Above Neighbor found for ' + i);
-    }
-
-    // Check above-right
-    if (this.selectedNeighbour(row-1, column+1)) {
-      neighbours++;
-      // console.log('Above right Neighbor found for ' + i);
-    }
-
-    // Check left
-    if (this.selectedNeighbour(row, column-1)) {
-      neighbours++;
-      // console.log('Left Neighbor found for ' + i);
-    }
-
-    // Check right
-    if (this.selectedNeighbour(row, column+1)) {
-      neighbours++;
-      // console.log('Right Neighbor found for ' + i);
-    }
-
-    // Check below-left
-    if (this.selectedNeighbour(row+1, column-1)) {
-      neighbours++;
-      // console.log('Below left Neighbor found for ' + i);
-    }
-
-    // Check below
-    if (this.selectedNeighbour(row+1, column)) {
-      neighbours++;
-      // console.log('Below Neighbor found for ' + i);
-    }
-
-    // Check below-right
-    if (this.selectedNeighbour(row+1, column+1)) {
-      neighbours++;
-      // console.log('Below right Neighbor found for ' + i);
-    }
-
-    return neighbours;
-  }
-
-  selectedNeighbour(row, col) {
-    let total = Math.sqrt(this.map.length);
-
-    if (row === -1) {
-      return false;
-    }
-    if (row === total) {
-      return false;
-    }
-    if (col === -1) {
-      return false;
-    }
-    if (col === total) {
-      return false;
-    }
-
-    let neighbour = row * total + col;
-    return this.map[neighbour][2];
-  }
-
-  doSimulationStep(count, id) {
-    let deathLimit = 3;
-    let birthLimit = 4;
-
-    if (this.map[id][2]) {
-      if (count < deathLimit) {
-        return false;
-      } else {
-        return true;
-      }
-    } else {
-      if (count > birthLimit) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-  }
-
+  // MAP RERENDERING DUE TO MOVEMENT & INTERACTION
   renderMap(currentXY, nextXY) {
     let newMap = this.state.visualMap;
 
