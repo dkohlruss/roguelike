@@ -62,7 +62,7 @@ class App extends Component {
           this.checkCollision(currentXY, nextXY);
           break;
         }
-        case "default":
+        default:
           break;
 
 
@@ -96,6 +96,8 @@ class App extends Component {
           case 'treasure': {
             let rand = Math.floor(Math.random() * 5);
             this.treasureReward(rand);
+            visualMap[nextXY] = <Cell type='land' key={nextXY} passable={true} />;
+
             break;
           }
         }
