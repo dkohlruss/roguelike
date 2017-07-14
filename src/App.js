@@ -61,10 +61,9 @@ class App extends Component {
           nextXY = this.getNextCell(event.key);
           this.checkCollision(currentXY, nextXY);
           break;
-        }
         default:
           break;
-
+        }
 
 
       });
