@@ -96,6 +96,8 @@ class App extends Component {
   }
 
   // CELLULAR AUTOMA 'NEIGHBOUR COUNTING' FUNCTIONS
+
+  // When selectedNeighbour returns true (when there is an 'alive'/passable neighbour), neighbours is increased by 1
   getNeighbours(row, column) {
     let neighbours = 0;
     if (this.selectedNeighbour(row-1, column-1)) {
@@ -126,9 +128,8 @@ class App extends Component {
     return neighbours;
   }
 
+  // Returns true if the coordinates passed coincide with an 'alive' cell
   selectedNeighbour(row, col) {
-    let total = Math.sqrt(this.map.length);
-
     if (row === -1) {
       return false;
     }
@@ -142,11 +143,13 @@ class App extends Component {
       return false;
     }
 
-    let neighbour = row * total + col;
+    let neighbour = this.getID(row, col);
     return this.map[neighbour][2];
   }
 
   // MAP CREATION AND SMOOTHING
+  // Randomly creates a grid of alive & dead cells, using the limit var to determine likelihood of an 'alive' cell. Lower = more likely to be alive
+  // Returns an array of arrays that contain an x-coord, y-coord, and boolean true/false value for an 'alive'/land cell.
   createMap(height, width) {
     let map = [];
     let isLand = true;
@@ -166,6 +169,7 @@ class App extends Component {
     return map;
   }
 
+  // Takes in a map array, uses celular automa to 'smooth' the map into a cave system, and creates an array of JSX values to be used as map tiles/cells
   makeBoard(map) {
     let visualMap = [];
     let iterations = 2;
@@ -183,6 +187,7 @@ class App extends Component {
     return visualMap;
   }
 
+  // Calculates neighbours of each cell and sends the # of neighbours and cell ID to doSimulationStep to determine whether to 'kill' or 'birth' pathway
   smoothMap() {
     let newMap = [];
     for (let i = 0; i < this.map.length; i++) {
@@ -206,6 +211,7 @@ class App extends Component {
     this.map = newMap;
   }
 
+  // Kills or births pathway depending on count, the number of neighbours a cell has.
   doSimulationStep(count, id) {
     let deathLimit = 3;
     let birthLimit = 4;
@@ -232,20 +238,21 @@ class App extends Component {
     let hero = this.state.hero;
     let visualMap = this.state.visualMap;
 
-    if (this.map[nextXY][2]) { // if passable
-      // Check for collision
+    if (this.map[nextXY][2]) { // If cell exists on top of pathway (or is pathway)
+      // Check for collision with an object
       if (!this.state.visualMap[nextXY].props.passable) {
-        // If collision -- Determine type & interact (or not)
-        let obj = this.enemies.filter((obj) => {
-          return obj.location === nextXY;
-        });
-
-        switch (this.state.visualMap[nextXY].props.type) {
+        switch (this.state.visualMap[nextXY].props.type) { // Check what type of interaction -- enemy or pickup
           default: { // default state = all enemies
+            let obj = this.enemies.filter((obj) => {
+              return obj.location === nextXY;
+            }); // Looks at only the enemy in the location given
+
+            // Hero & enemy attack
             let levelModifier = Math.random() + hero.level;
             hero.hp = Math.floor(hero.hp - obj[0].attack / levelModifier);
             obj[0].hp = obj[0].hp - hero.attack * levelModifier * 10;
 
+            // If enemy is killed, it is replaced by pathway and hero gains XP
             if (obj[0].hp <= 0) {
               hero.xp += obj[0].xp;
               visualMap[nextXY] = <Cell type='land' key={nextXY} passable={true} black={false} />;
@@ -253,6 +260,7 @@ class App extends Component {
               this.checkXP(obj[0]);
             }
 
+            // If hero is killed, game over and new map generated
             if (hero.hp <= 0) {
               alert('Game over!  Generating a new dungeon.');
               window.location.reload(false);
@@ -286,6 +294,7 @@ class App extends Component {
     }
   }
 
+  // Checks new XP of hero (or if hero beat the game) and levels up accordingly
   checkXP(enemy) {
     if (enemy.type === 'boss') {
       alert('You win!');
@@ -313,6 +322,7 @@ class App extends Component {
     }
   }
 
+  // Applies treasure and medical rewards when picked up
   treasureReward(num) {
     let hero = this.state.hero;
     if (num === 0) {
@@ -332,6 +342,7 @@ class App extends Component {
     this.setState({hero});
   }
 
+  // When a weapon is picked up, attack is increased and displayed weapon name is modified
   getWeapon() {
     let weapons = ['null', 'Fist', 'Club', 'Mace', 'Axe', 'Sword'];
     let hero = this.state.hero;
@@ -342,30 +353,7 @@ class App extends Component {
     this.setState({hero});
   }
 
-  getNextCell(direction) {
-      let currentXY = this.getRowCol(this.state.hero.location);
-      let nextXY = this.getID(currentXY.row, currentXY.col);
-
-      switch(direction) {
-        case 'ArrowUp':
-          nextXY = this.getID(currentXY.row - 1, currentXY.col);
-          break;
-        case 'ArrowDown':
-          nextXY = this.getID(currentXY.row + 1, currentXY.col);
-          break;
-        case 'ArrowLeft':
-          nextXY = this.getID(currentXY.row, currentXY.col - 1);
-          break;
-        case 'ArrowRight':
-          nextXY = this.getID(currentXY.row, currentXY.col + 1);
-          break;
-      }
-
-      return nextXY;
-  }
-
-
-  // GENERATION AND PLACING OF OBJECTS, ENEMIES, ETC RANDOMLY
+    // GENERATION AND PLACING OF OBJECTS, ENEMIES, ETC RANDOMLY
   generateEnemies() {
     let enemies = [];
     let limit = 20;
@@ -495,14 +483,17 @@ class App extends Component {
     return meds;
   }
 
+  // If a random value of a potential treasure cell is > than a limit, treasure or health is placed there.
   placeTreasure(treasure) {
     let map = this.state.visualMap;
     let rand = Math.random();
-    if (rand > 0.75 && this.map[treasure.location][2]) {
+    let limit = 0.75;
+    if (rand > limit && this.map[treasure.location][2]) {
       map[treasure.location] = <Cell type={treasure.type} key={treasure.location} passable={treasure.passable} black={false} />;
     }
   }
 
+  // Places an enemy or other interactable
   placeObject(obj) {
     let map = this.state.visualMap;
     let placed = false;
@@ -533,6 +524,7 @@ class App extends Component {
     this.setState({visualMap: newMap});
   }
 
+  // Controls the 'fog of war' beyond a 6x6 area around the hero
   blackOut(location) {
     let visualMap = this.state.visualMap;
     let total = Math.floor(Math.sqrt(visualMap.length));
