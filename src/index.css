@@ -34,35 +34,35 @@ body {
 .enemy1 {
   height: 10px;
   width: 10px;
-  background: #808080;
+  background: #E80000;
   float: left;
 }
 
 .enemy2 {
   height: 10px;
   width: 10px;
-  background: #606060;
+  background: #800000;
   float: left;
 }
 
 .enemy3 {
   height: 10px;
   width: 10px;
-  background: #404040;
+  background: #600000;
   float: left;
 }
 
 .enemy4 {
   height: 10px;
   width: 10px;
-  background: #282828;
+  background: #500000;
   float: left;
 }
 
 .enemy5 {
   height: 10px;
   width: 10px;
-  background: #101010;
+  background: #300000;
   float: left;
 }
 
@@ -92,4 +92,15 @@ body {
   width: 10px;
   background: black;
   float: left;
+}
+
+.instructions {
+  margin: 100px;
+  float: left;
+}
+
+p {
+  margin: 5px;
+  padding-left: 10px;
+  font-size: 10px;
 }
