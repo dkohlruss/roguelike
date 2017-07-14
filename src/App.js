@@ -6,7 +6,7 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    this.map = this.createMap(75,75); // Creates game board with x,y width/height
+    this.map = this.createMap(50,50); // Creates game board with x,y width/height
     this.visualMap = this.makeBoard(this.map);
 
     let hero = {
@@ -43,27 +43,30 @@ class App extends Component {
       this.placeTreasure(this.meds[i]);
     }
 
+    this.blackOut(this.state.hero.location);
+
     window.addEventListener("keydown", (event) => {
-        let currentXY = this.state.hero.location;
-        let nextXY = 0;
+        let currentXY = this.getRowCol(this.state.hero.location);
+        let currentID = this.state.hero.location;
+        let nextID = 0;
 
         switch (event.key) {
           case "ArrowUp":
             // Calculate cell intended to move to
-            nextXY = this.getNextCell(event.key);
-            this.checkCollision(currentXY, nextXY);
+            nextID = this.getID(currentXY.row - 1, currentXY.col);
+            this.checkCollision(currentID, nextID);
             break;
           case "ArrowDown":
-            nextXY = this.getNextCell(event.key);
-            this.checkCollision(currentXY, nextXY);
+            nextID = this.getID(currentXY.row + 1, currentXY.col);
+            this.checkCollision(currentID, nextID);
             break;
           case "ArrowLeft":
-            nextXY = this.getNextCell(event.key);
-            this.checkCollision(currentXY, nextXY);
+            nextID = this.getID(currentXY.row, currentXY.col - 1);
+            this.checkCollision(currentID, nextID);
             break;
           case "ArrowRight":
-            nextXY = this.getNextCell(event.key);
-            this.checkCollision(currentXY, nextXY);
+            nextID = this.getID(currentXY.row, currentXY.col + 1);
+            this.checkCollision(currentID, nextID);
             break;
           default:
             break;
@@ -91,7 +94,7 @@ class App extends Component {
 
             if (obj[0].hp <= 0) {
               hero.xp += obj[0].xp;
-              visualMap[nextXY] = <Cell type='land' key={nextXY} passable={true} />;
+              visualMap[nextXY] = <Cell type='land' key={nextXY} passable={true} black={false} />;
 
               this.checkXP(obj[0]);
             }
@@ -104,13 +107,13 @@ class App extends Component {
           }
           case 'treasure': {
             this.treasureReward(1);
-            visualMap[nextXY] = <Cell type='land' key={nextXY} passable={true} />;
+            visualMap[nextXY] = <Cell type='land' key={nextXY} passable={true} black={false} />;
 
             break;
           }
           case 'meds': {
             this.treasureReward(0);
-            visualMap[nextXY] = <Cell type='land' key={nextXY} passable={true} />;
+            visualMap[nextXY] = <Cell type='land' key={nextXY} passable={true} black={false} />;
 
             break;
           }
@@ -361,7 +364,7 @@ class App extends Component {
     let map = this.state.visualMap;
     let rand = Math.random();
     if (rand > 0.75 && this.map[treasure.location][2]) {
-      map[treasure.location] = <Cell type={treasure.type} key={treasure.location} passable={treasure.passable}/>;
+      map[treasure.location] = <Cell type={treasure.type} key={treasure.location} passable={treasure.passable} black={false} />;
     }
   }
 
@@ -411,9 +414,9 @@ class App extends Component {
 
     for (let i = 0; i < map.length; i++) {
       if (map[i][2]) {
-        visualMap.push(<Cell type='land' key={visualMap.length} passable={true} />);
+        visualMap.push(<Cell type='land' key={visualMap.length} passable={true} black={false} />);
       } else {
-        visualMap.push(<Cell type='rock' key={visualMap.length} passable={false} />);
+        visualMap.push(<Cell type='rock' key={visualMap.length} passable={false} black={false} />);
       }
     }
     return visualMap;
@@ -432,7 +435,7 @@ class App extends Component {
       let row = Math.floor(i / total);
       let column = i - row * total;
 
-      if (row > 1 && column > 1 && row < total - 2 && column < total - 2) {
+      if (row > 2 && column > 2 && row < total - 3 && column < total - 3) {
         neighbours = this.getNeighbours(row, column);
       }
 
@@ -537,10 +540,37 @@ class App extends Component {
   renderMap(currentXY, nextXY) {
     let newMap = this.state.visualMap;
 
-    newMap[currentXY] = <Cell type='land' key={currentXY} passable={true} />;
-    newMap[nextXY] = <Cell type='hero' key={nextXY} passable={false} />;
+    newMap[currentXY] = <Cell type='land' key={currentXY} passable={true} black={false} />;
+    newMap[nextXY] = <Cell type='hero' key={nextXY} passable={false} black={false} />;
+
+    this.blackOut(nextXY);
 
     this.setState({visualMap: newMap});
+  }
+
+  blackOut(location) {
+    let visualMap = this.state.visualMap;
+    let total = Math.floor(Math.sqrt(visualMap.length));
+
+    let visible = [];
+
+    for (let i = 3; i > -4; i--) {
+      let newLocation = location + i;
+      for (var j = 3; j > -1; j--) {
+        let aboveLocation = newLocation - j * total;
+        let belowLocation = newLocation + j * total;
+        visible.push(aboveLocation, belowLocation);
+      }
+    }
+
+    for (let i = 0; i < visualMap.length; i++) {
+      if (visible.indexOf(i) !== -1) {
+        console.log(i);
+        visualMap[i] = <Cell type={this.state.visualMap[i].props.type} key={i} passable={this.state.visualMap[i].props.passable} black={false} />;
+      } else {
+        visualMap[i] = <Cell type={this.state.visualMap[i].props.type} key={i} passable={this.state.visualMap[i].props.passable} black={true} />;
+      }
+    }
   }
 
   render() {
