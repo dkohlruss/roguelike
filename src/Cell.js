@@ -1,20 +1,9 @@
-import React, { Component } from 'react';
+import React from 'react';
 
-class Cell extends Component {
-
-  render() {
-    if (this.props.type === 'land') {
-      return (
-        <div className='land'></div>
-      );
-    } else if (this.props.type === 'rock') {
-      return (
-        <div className='rock'></div>
-      );
-    }
-
-
-  }
+const Cell = (props) => {
+  return (
+    <div className={props.type} />
+  );
 }
 
 export default Cell;
