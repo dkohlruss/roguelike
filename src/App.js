@@ -13,7 +13,7 @@ class App extends Component {
         name: 'Rudiger',
         weapon: 'Fist',
         hp: 100,
-        attack: 10.0,
+        attack: 1.0,
         defend: 1.0,
         level: 1,
         location: 0,
@@ -40,7 +40,6 @@ class App extends Component {
     }
 
     window.addEventListener("keydown", (event) => {
-      let hero = this.state.hero;
       let currentXY = this.state.hero.location;
       let nextXY = 0;
 
@@ -63,6 +62,8 @@ class App extends Component {
           this.checkCollision(currentXY, nextXY);
           break;
         }
+        case "default":
+          break;
 
 
 
@@ -78,13 +79,13 @@ class App extends Component {
       if (!this.state.visualMap[nextXY].props.passable) {
         // If collision -- Determine type & interact (or not)
         let obj = this.enemies.filter((obj) => {
-          return obj.location == nextXY;
+          return obj.location === nextXY;
         });
 
         switch (this.state.visualMap[nextXY].props.type) {
           case 'enemy': {
             hero.hp = hero.hp - obj[0].attack;
-            obj[0].hp = obj[0].hp - hero.attack;
+            obj[0].hp = obj[0].hp - hero.attack * 10;
 
             if (obj[0].hp <= 0) {
               hero.xp += obj[0].xp;
@@ -93,7 +94,9 @@ class App extends Component {
             break;
           }
           case 'treasure': {
-
+            let rand = Math.floor(Math.random() * 5);
+            this.treasureReward(rand);
+            break;
           }
         }
 
@@ -110,8 +113,34 @@ class App extends Component {
     }
   }
 
+  treasureReward(num) {
+    let hero = this.state.hero;
+    if (num > 3) {
+      hero.hp = 100;
+    } else if (num < 1) {
+      hero.attack *= 1.5;
+    } else {
+      hero.attack *= 1.2;
+    }
+    this.setState({hero});
+    this.checkWeapon();
+  }
+
+  checkWeapon() {
+    let weapons = ['Fist', 'Club', 'Mace', 'Axe', 'Sword'];
+    let hero = this.state.hero;
+    if (hero.attack > 1 && hero.attack < 2) {
+      hero.weapon = weapons[1];
+    } else if (hero.attack < 3) {
+      hero.weapon = weapons[2];
+    } else if (hero.attack < 5) {
+      hero.weapon = weapons[3];
+    } else {
+      hero.weapon = weapons[4];
+    }
+  }
+
   getNextCell(direction) {
-      let currentCell = this.state.hero.location;
       let currentXY = this.getRowCol(this.state.hero.location);
       let nextXY = this.getID(currentXY.row, currentXY.col);
 
