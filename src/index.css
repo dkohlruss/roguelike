@@ -5,8 +5,8 @@ body {
 }
 
 .board {
-  height: 500px;
-  width: 500px;
+  height: 750px;
+  width: 750px;
   float: left;
 }
 
@@ -31,10 +31,45 @@ body {
   float: left;
 }
 
-.enemy {
+.enemy1 {
   height: 10px;
   width: 10px;
-  background: grey;
+  background: #808080;
+  float: left;
+}
+
+.enemy2 {
+  height: 10px;
+  width: 10px;
+  background: #606060;
+  float: left;
+}
+
+.enemy3 {
+  height: 10px;
+  width: 10px;
+  background: #404040;
+  float: left;
+}
+
+.enemy4 {
+  height: 10px;
+  width: 10px;
+  background: #282828;
+  float: left;
+}
+
+.enemy5 {
+  height: 10px;
+  width: 10px;
+  background: #101010;
+  float: left;
+}
+
+.boss {
+  height: 10px;
+  width: 10px;
+  background: purple;
   float: left;
 }
 
@@ -43,4 +78,11 @@ body {
   width: 10px;
   background: yellow;
   float: left;
+}
+
+.meds {
+  height: 10px;
+  width: 10px;
+  background: blue;
+  float: left
 }

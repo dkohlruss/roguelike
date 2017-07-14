@@ -6,15 +6,14 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    this.map = this.createMap(50,50); // Creates game board with x,y width/height
+    this.map = this.createMap(75,75); // Creates game board with x,y width/height
     this.visualMap = this.makeBoard(this.map);
 
     let hero = {
         name: 'Rudiger',
         weapon: 'Fist',
         hp: 100,
-        attack: 1.0,
-        defend: 1.0,
+        attack: 1,
         level: 1,
         location: 0,
         type: 'hero',
@@ -23,6 +22,7 @@ class App extends Component {
 
     this.enemies = this.generateEnemies();
     this.treasure = this.generateTreasure();
+    this.meds = this.generateMeds();
 
     this.state = {
       visualMap: this.visualMap,
@@ -39,33 +39,35 @@ class App extends Component {
       this.placeTreasure(this.treasure[i]);
     }
 
+    for (let i = 0; i < this.meds.length; i++) {
+      this.placeTreasure(this.meds[i]);
+    }
+
     window.addEventListener("keydown", (event) => {
-      let currentXY = this.state.hero.location;
-      let nextXY = 0;
+        let currentXY = this.state.hero.location;
+        let nextXY = 0;
 
-      switch (event.key) {
-        case "ArrowUp":
-          // Calculate cell intended to move to
-          nextXY = this.getNextCell(event.key);
-          this.checkCollision(currentXY, nextXY);
-          break;
-        case "ArrowDown":
-          nextXY = this.getNextCell(event.key);
-          this.checkCollision(currentXY, nextXY);
-          break;
-        case "ArrowLeft":
-          nextXY = this.getNextCell(event.key);
-          this.checkCollision(currentXY, nextXY);
-          break;
-        case "ArrowRight":
-          nextXY = this.getNextCell(event.key);
-          this.checkCollision(currentXY, nextXY);
-          break;
-        default:
-          break;
+        switch (event.key) {
+          case "ArrowUp":
+            // Calculate cell intended to move to
+            nextXY = this.getNextCell(event.key);
+            this.checkCollision(currentXY, nextXY);
+            break;
+          case "ArrowDown":
+            nextXY = this.getNextCell(event.key);
+            this.checkCollision(currentXY, nextXY);
+            break;
+          case "ArrowLeft":
+            nextXY = this.getNextCell(event.key);
+            this.checkCollision(currentXY, nextXY);
+            break;
+          case "ArrowRight":
+            nextXY = this.getNextCell(event.key);
+            this.checkCollision(currentXY, nextXY);
+            break;
+          default:
+            break;
         }
-
-
       });
   }
 
@@ -82,19 +84,32 @@ class App extends Component {
         });
 
         switch (this.state.visualMap[nextXY].props.type) {
-          case 'enemy': {
-            hero.hp = hero.hp - obj[0].attack;
-            obj[0].hp = obj[0].hp - hero.attack * 10;
+          default: { // default state = all enemies
+            let levelModifier = Math.random() + hero.level;
+            hero.hp = Math.floor(hero.hp - obj[0].attack / levelModifier);
+            obj[0].hp = obj[0].hp - hero.attack * levelModifier * 10;
 
             if (obj[0].hp <= 0) {
               hero.xp += obj[0].xp;
               visualMap[nextXY] = <Cell type='land' key={nextXY} passable={true} />;
+
+              this.checkXP(obj[0]);
+            }
+
+            if (hero.hp <= 0) {
+              alert('Game over!  Generating a new dungeon.');
+              window.location.reload(false);
             }
             break;
           }
           case 'treasure': {
-            let rand = Math.floor(Math.random() * 5);
-            this.treasureReward(rand);
+            this.treasureReward(1);
+            visualMap[nextXY] = <Cell type='land' key={nextXY} passable={true} />;
+
+            break;
+          }
+          case 'meds': {
+            this.treasureReward(0);
             visualMap[nextXY] = <Cell type='land' key={nextXY} passable={true} />;
 
             break;
@@ -114,31 +129,60 @@ class App extends Component {
     }
   }
 
+  checkXP(enemy) {
+    if (enemy.type === 'boss') {
+      alert('You win!');
+    } else {
+      let hero = this.state.hero;
+
+      let xp = hero.xp;
+
+      if (xp > 99 && hero.level === 1) {
+        hero.level++;
+        hero.hp = 100;
+      }
+      if (xp > 199 && hero.level === 2) {
+        hero.level++;
+        hero.hp = 100;
+      }
+      if (xp > 399 && hero.level === 3) {
+        hero.level++;
+        hero.hp = 100;
+      }
+      if (xp > 799 && hero.level === 4) {
+        hero.level++;
+        hero.hp = 100;
+      }
+    }
+  }
+
   treasureReward(num) {
     let hero = this.state.hero;
-    if (num > 3) {
-      hero.hp = 100;
-    } else if (num < 1) {
-      hero.attack *= 1.5;
+    if (num === 0) {
+      let random = Math.floor(Math.random() * 50) + 15;
+      hero.hp += random;
+
+      if (hero.hp > 100) {
+        hero.hp = 100;
+      }
+    }
+      else if (num === 1) {
+      this.getWeapon();
     } else {
       hero.attack *= 1.2;
     }
+
     this.setState({hero});
-    this.checkWeapon();
   }
 
-  checkWeapon() {
-    let weapons = ['Fist', 'Club', 'Mace', 'Axe', 'Sword'];
+  getWeapon() {
+    let weapons = ['null', 'Fist', 'Club', 'Mace', 'Axe', 'Sword'];
     let hero = this.state.hero;
-    if (hero.attack > 1 && hero.attack < 2) {
-      hero.weapon = weapons[1];
-    } else if (hero.attack < 3) {
-      hero.weapon = weapons[2];
-    } else if (hero.attack < 5) {
-      hero.weapon = weapons[3];
-    } else {
-      hero.weapon = weapons[4];
-    }
+
+    hero.attack++;
+    hero.weapon = weapons[hero.attack] || weapons[5];
+
+    this.setState({hero});
   }
 
   getNextCell(direction) {
@@ -165,22 +209,86 @@ class App extends Component {
 
   generateEnemies() {
     let enemies = [];
-    let rand = Math.floor(Math.random() * 50);
-    for (let i = 0; i < rand; i++) {
-      enemies.push({
-        name: 'Enemy',
-        weapon: 'Club',
-        hp: 50,
-        attack: 1.0,
-        defend: 1.0,
-        location: i,
-        type: 'enemy',
-        id: i,
-        passable: false,
-        xp: 10
-      });
+    let limit = 20;
+    for (let i = 0; i < limit; i++) {
+      let level = Math.floor(Math.random() * 5 + 1);
+      switch(level) {
+        case 1:
+          enemies.push({
+            name: 'Enemy',
+            weapon: 'Club',
+            hp: 20,
+            attack: 5,
+            location: i,
+            type: 'enemy1',
+            id: i,
+            passable: false,
+            xp: 10
+          });
+          break;
+        case 2:
+          enemies.push({
+            name: 'Enemy',
+            hp: 50,
+            attack: 10,
+            location: i,
+            type: 'enemy2',
+            id: i,
+            passable: false,
+            xp: 20
+          });
+          break;
+        case 3:
+          enemies.push({
+            name: 'Enemy',
+            hp: 100,
+            attack: 20,
+            location: i,
+            type: 'enemy3',
+            id: i,
+            passable: false,
+            xp: 40
+          });
+          break;
+        case 4:
+          enemies.push({
+            name: 'Enemy',
+            hp: 200,
+            attack: 50,
+            location: i,
+            type: 'enemy4',
+            id: i,
+            passable: false,
+            xp: 100
+          });
+          break;
+        case 5:
+          enemies.push({
+            name: 'Enemy',
+            hp: 400,
+            attack: 100,
+            location: i,
+            type: 'enemy5',
+            id: i,
+            passable: false,
+            xp: 200
+          });
+          break;
+      }
+
       this.map[i][2] = false;
     }
+
+    enemies.push({
+      name: 'Boss',
+      hp: 1000,
+      attack: 400,
+      location: 0,
+      type: 'boss',
+      id: 0,
+      passable: false,
+      xp: 1000
+    })
 
     return enemies;
   }
@@ -207,6 +315,27 @@ class App extends Component {
     return treasure;
   }
 
+  generateMeds() {
+    let meds = [];
+
+    for (let i = 0; i < this.map.length; i++) {
+      let rowCol = this.getRowCol(i);
+
+      let neighbours = this.getNeighbours(rowCol.row, rowCol.col);
+      if (neighbours < 4) {
+        meds.push({
+          name: 'Meds',
+          hp: 20,
+          type: 'meds',
+          id: i,
+          location: i,
+          passable: false
+        });
+      }
+    }
+    return meds;
+  }
+
 
   getID(row, col) {
     let total = Math.sqrt(this.map.length);
@@ -231,7 +360,7 @@ class App extends Component {
   placeTreasure(treasure) {
     let map = this.state.visualMap;
     let rand = Math.random();
-    if (rand > 0.6 && this.map[treasure.location][2]) {
+    if (rand > 0.75 && this.map[treasure.location][2]) {
       map[treasure.location] = <Cell type={treasure.type} key={treasure.location} passable={treasure.passable}/>;
     }
   }
@@ -416,7 +545,7 @@ class App extends Component {
 
   render() {
     return (
-      <div>Health: {this.state.hero.hp}, XP: {this.state.hero.xp}, Weapon: {this.state.hero.weapon}
+      <div>Health: {this.state.hero.hp}, Level: {this.state.hero.level} XP: {this.state.hero.xp}, Weapon: {this.state.hero.weapon}
       <div className='board'>{this.state.visualMap}</div>
       </div>
     );
