@@ -151,6 +151,7 @@ class App extends Component {
   // MAP CREATION AND SMOOTHING
   // Randomly creates a grid of alive & dead cells, using the limit var to determine likelihood of an 'alive' cell. Lower = more likely to be alive
   // Returns an array of arrays that contain an x-coord, y-coord, and boolean true/false value for an 'alive'/land cell.
+  // All map creation and smoothing mapping creating via tutorial at https://gamedevelopment.tutsplus.com/tutorials/generate-random-cave-levels-using-cellular-automata--gamedev-9664
   createMap(height, width) {
     let map = [];
     let isLand = true;
