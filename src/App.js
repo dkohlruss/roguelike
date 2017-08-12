@@ -107,16 +107,16 @@ class App extends Component {
       neighbours++;
     }
     if (this.selectedNeighbour(row-1, column+1)) {
-      neighbours++
+      neighbours++;
     }
     if (this.selectedNeighbour(row, column-1)) {
-      neighbours++
+      neighbours++;
     }
     if (this.selectedNeighbour(row, column+1)) {
-      neighbours++
+      neighbours++;
     }
     if (this.selectedNeighbour(row+1, column-1)) {
-      neighbours+
+      neighbours++;
     }
     if (this.selectedNeighbour(row+1, column)) {
       neighbours++;
