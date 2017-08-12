@@ -130,6 +130,7 @@ class App extends Component {
 
   // Returns true if the coordinates passed coincide with an 'alive' cell
   selectedNeighbour(row, col) {
+    let total = Math.sqrt(this.map.length);
     if (row === -1) {
       return false;
     }
